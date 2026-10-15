@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS CLAW - Autonomer Entwicklungs-Loop 24/7</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Orbitron & Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #050811;
+            --bg-card: #0b1220;
+            --bg-card-inner: #0f192d;
+            --border-blue: #1b2e4b;
+            --neon-cyan: #00e5ff;
+            --neon-blue: #2979ff;
+            --neon-green: #00e676;
+            --neon-amber: #ffab00;
+            --neon-purple: #aa00ff;
+            --neon-red: #ff1744;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #03050a;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 229, 255, 0.08) 0%, transparent 35%),
+                radial-gradient(circle at 85% 85%, rgba(170, 0, 255, 0.08) 0%, transparent 35%);
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.06em;
+        }
+
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Smartphone Frame */
+        .phone-frame {
+            width: 380px;
+            height: 812px;
+            background: linear-gradient(180deg, #070c18 0%, #050912 100%);
+            border: 2px solid #1e3a5f;
+            border-radius: 34px;
+            box-shadow: 
+                0 0 35px rgba(0, 195, 255, 0.14),
+                inset 0 0 15px rgba(0, 195, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        /* Glowing Cards */
+        .cyber-card {
+            background: rgba(12, 20, 36, 0.92);
+            border: 1px solid #1c3150;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .cyber-card-cyan {
+            background: linear-gradient(180deg, rgba(8, 33, 52, 0.88) 0%, rgba(7, 20, 36, 0.92) 100%);
+            border: 1px solid #00d0ff;
+            box-shadow: 0 0 14px rgba(0, 229, 255, 0.2), inset 0 0 10px rgba(0, 229, 255, 0.08);
+        }
+
+        /* Scrollbar styling */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(11, 18, 32, 0.4);
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #1e3a5f;
+            border-radius: 4px;
+        }
+
+        /* Animations */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.92); opacity: 0.85; }
+            50% { transform: scale(1.06); opacity: 1; }
+            100% { transform: scale(0.92); opacity: 0.85; }
+        }
+        .animate-core {
+            animation: pulse-ring 2.6s infinite ease-in-out;
+        }
+
+        @keyframes float-pet {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-pet {
+            animation: float-pet 3.2s infinite ease-in-out;
+        }
+
+        @keyframes road-grid {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 24px; }
+        }
+
+        /* Toggle Switch */
+        .cyber-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #1a273b;
+            border-radius: 999px;
+            border: 1px solid #2c4263;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .cyber-switch.active {
+            background: rgba(0, 140, 255, 0.35);
+            border-color: #00d0ff;
+            box-shadow: 0 0 10px rgba(0, 208, 255, 0.35);
+        }
+        .cyber-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: #94a3b8;
+            border-radius: 50%;
+            transition: all 0.25s ease;
+        }
+        .cyber-switch.active::after {
+            left: 21px;
+            background: #00e5ff;
+            box-shadow: 0 0 8px #00e5ff;
+        }
+
+        /* Stepper Connector */
+        .step-line {
+            height: 2px;
+            flex: 1;
+            background: #1e3352;
+            margin: 0 2px;
+            position: relative;
+            top: -8px;
+        }
+        .step-line.done {
+            background: linear-gradient(90deg, #00e676, #00b0ff);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-4 px-2 sm:px-6 select-none">
+
+    <!-- Top Control Bar (Prototype Mode Switcher & Global Controls) -->
+    <header class="w-full max-w-7xl mb-4 flex flex-wrap items-center justify-between gap-3 bg-[#0a1222]/90 border border-[#1d3557] rounded-2xl px-4 py-2.5 backdrop-blur-md shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-400/50 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(0,229,255,0.25)]">
+                <i class="fa-solid fa-microchip text-lg"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-cyber text-sm sm:text-base font-bold text-cyan-400 tracking-wider">NEXUS CLAW</h1>
+                    <span class="text-[10px] font-mono-code uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">v2.4 Prototype</span>
+                </div>
+                <p class="text-xs text-slate-400">Autonomer Android Game-Builder & 24/7 KI-Entwicklungs-Loop</p>
+            </div>
+        </div>
+
+        <!-- View Mode Switcher: Single Interactive Phone vs. All 6 Screens Grid -->
+        <div class="flex items-center gap-2 bg-[#060b14] p-1 rounded-xl border border-[#1a2e4c]">
+            <button id="btnModeSingle" onclick="setLayoutMode('single')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.5)] flex items-center gap-1.5">
+                <i class="fa-solid fa-mobile-screen"></i> Einzel-Ansicht (Interaktiv)
+            </button>
+            <button id="btnModeGrid" onclick="setLayoutMode('grid')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-table-cells-large"></i> Alle 6 Screens (Grid)
+            </button>
+        </div>
+
+        <!-- Quick Screen Jumper -->
+        <div class="hidden xl:flex items-center gap-1.5 text-xs">
+            <span class="text-slate-400 mr-1">Screen:</span>
+            <button onclick="switchScreen('dashboard')" class="screen-pill px-2.5 py-1 rounded-lg bg-[#111e34] hover:bg-[#192b48] text-cyan-300 border border-cyan-500/30">1. Dashboard</button>
+            <button onclick="switchScreen('projekte')" class="screen-pill px-2.5 py-1 rounded-lg bg-[#111e34] hover:bg-[#192b48] text-slate-300 border border-slate-700">2. Projekte</button>
+            <button onclick="switchScreen('tests')" class="screen-pill px-2.5 py-1 rounded-lg bg-[#111e34] hover:bg-[#192b48] text-slate-300 border border-slate-700">3. Tests</button>
+            <button onclick="switchScreen('logs')" class="screen-pill px-2.5 py-1 rounded-lg bg-[#111e34] hover:bg-[#192b48] text-slate-300 border border-slate-700">4. Live-Logs</button>
+            <button onclick="switchScreen('agent')" class="screen-pill px-2.5 py-1 rounded-lg bg-[#111e34] hover:bg-[#192b48] text-slate-300 border border-slate-700">5. KI-Agent</button>
+            <button onclick="switchScreen('settings')" class="screen-pill px-2.5 py-1 rounded-lg bg-[#111e34] hover:bg-[#192b48] text-slate-300 border border-slate-700">6. Einstellungen</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER FOR PHONES -->
+    <main id="phonesContainer" class="w-full max-w-7xl flex flex-wrap justify-center gap-6 items-start">
+
+        <!-- ===================================================================
+             SCREEN 1: DASHBOARD (NEXUS CLAW)
+             =================================================================== -->
+        <section id="screen-dashboard" class="phone-frame" data-screen="dashboard">
+            <!-- Android Status Bar -->
+            <div class="px-5 pt-2.5 pb-1 flex justify-between items-center text-[12px] font-semibold text-slate-200">
+                <span class="live-clock">18:36</span>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                    <i class="fa-solid fa-bell-slash text-slate-400"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-signal"></i>
+                    <span class="text-emerald-400 flex items-center gap-0.5"><i class="fa-solid fa-battery-full"></i> 100%</span>
+                </div>
+            </div>
+
+            <!-- App Header -->
+            <div class="px-4 py-1.5 flex items-center justify-between border-b border-[#15253f]">
+                <button onclick="switchScreen('agent')" class="text-cyan-400 hover:text-cyan-300 p-1" title="KI-Agent öffnen">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div class="text-center">
+                    <div class="font-cyber text-[19px] font-extrabold text-cyan-400 tracking-widest drop-shadow-[0_0_8px_rgba(0,229,255,0.5)] leading-tight">NEXUS CLAW</div>
+                    <div class="text-[9.5px] font-semibold tracking-widest text-slate-300 uppercase">AUTONOMER ENTWICKLUNGS-LOOP 24/7</div>
+                </div>
+                <button onclick="switchScreen('settings')" class="text-cyan-400 hover:text-cyan-300 p-1" title="Einstellungen">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scroll px-3.5 py-2.5 space-y-2.5">
+                
+                <!-- Hero Cyber Operator + Status Widgets -->
+                <div class="relative rounded-2xl overflow-hidden border border-[#1d3558] bg-gradient-to-b from-[#0c1a30] via-[#091324] to-[#08101d] h-[250px] p-3 flex flex-col justify-between shadow-inner">
+                    
+                    <!-- Background Cyber Grid & Glow -->
+                    <div class="absolute inset-0 opacity-30 pointer-events-none" style="background-image: radial-gradient(#00e5ff 1px, transparent 1px); background-size: 18px 18px;"></div>
+                    <div class="absolute -left-6 bottom-0 w-56 h-56 bg-cyan-500/15 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="absolute right-4 bottom-8 w-36 h-36 bg-purple-600/20 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <!-- Illustrated Cyberpunk AI Avatar & Nexus Pet (SVG + High-Detail Stylized Render) -->
+                    <div class="absolute inset-0 flex items-end justify-start pointer-events-none overflow-hidden">
+                        <!-- Blonde Cyberpunk AI Operator Avatar -->
+                        <svg viewBox="0 0 260 250" class="w-[235px] h-[245px] -ml-2 drop-shadow-[0_0_16px_rgba(0,210,255,0.3)]">
+                            <defs>
+                                <linearGradient id="armorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#1e293b"/>
+                                    <stop offset="50%" stop-color="#0f172a"/>
+                                    <stop offset="100%" stop-color="#020617"/>
+                                </linearGradient>
+                                <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#fef08a"/>
+                                    <stop offset="50%" stop-color="#f59e0b"/>
+                                    <stop offset="100%" stop-color="#b45309"/>
+                                </linearGradient>
+                                <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#fde6d8"/>
+                                    <stop offset="100%" stop-color="#f3c6ad"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Gaming Chair Backrest -->
+                            <path d="M25,65 Q75,40 130,65 L155,245 L10,245 Z" fill="#0d1627" stroke="#2563eb" stroke-width="1.5"/>
+                            <!-- Hair Back -->
+                            <path d="M48,55 Q20,120 32,200 Q90,210 155,190 Q162,115 135,55 Z" fill="url(#hairGrad)"/>
+                            <!-- Cyber Suit / Armor -->
+                            <path d="M35,175 Q90,155 155,175 L175,250 L20,250 Z" fill="url(#armorGrad)" stroke="#00e5ff" stroke-width="1.5"/>
+                            <!-- Glowing Chest Core -->
+                            <polygon points="88,195 108,195 113,212 98,224 83,212" fill="#06283d" stroke="#00e5ff" stroke-width="1.5"/>
+                            <circle cx="98" cy="208" r="5" fill="#00e5ff"/>
+                            <text x="98" y="236" text-anchor="middle" fill="#00e5ff" font-family="Orbitron" font-size="6.5" font-weight="bold">NEXUS</text>
+                            <!-- Neck -->
+                            <rect x="87" y="132" width="22" height="28" rx="8" fill="url(#skinGrad)"/>
+                            <path d="M87,148 Q98,154 109,148" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+                            <!-- Head / Face -->
+                            <path d="M62,72 Q62,138 98,144 Q134,138 134,72 Q134,42 98,42 Q62,42 62,72 Z" fill="url(#skinGrad)"/>
+                            <!-- Eyes (Cyan Anime Style) -->
+                            <ellipse cx="82" cy="94" rx="7.5" ry="6" fill="#ffffff"/>
+                            <circle cx="83" cy="94" r="4.8" fill="#0284c7"/>
+                            <circle cx="83" cy="94" r="2.3" fill="#082f49"/>
+                            <circle cx="80.5" cy="92" r="1.6" fill="#ffffff"/>
+                            <ellipse cx="114" cy="94" rx="7.5" ry="6" fill="#ffffff"/>
+                            <circle cx="113" cy="94" r="4.8" fill="#0284c7"/>
+                            <circle cx="113" cy="94" r="2.3" fill="#082f49"/>
+                            <circle cx="110.5" cy="92" r="1.6" fill="#ffffff"/>
+                            <!-- Eyebrows & Smile -->
+                            <path d="M72,83 Q82,79 90,83" fill="none" stroke="#92400e" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M106,83 Q114,79 124,83" fill="none" stroke="#92400e" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M95,108 L99,112 L96,113" fill="none" stroke="#d99b7e" stroke-width="1.4" stroke-linecap="round"/>
+                            <path d="M90,123 Q98,128 106,123" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round"/>
+                            <!-- Blonde Hair Bangs -->
+                            <path d="M56,78 Q65,36 102,38 Q138,38 142,82 Q130,58 112,74 Q98,52 84,74 Q70,56 56,78 Z" fill="url(#hairGrad)"/>
+                            <!-- Cyber Headphones -->
+                            <path d="M52,85 Q48,26 98,26 Q148,26 144,85" fill="none" stroke="#1e293b" stroke-width="8"/>
+                            <path d="M52,85 Q48,26 98,26 Q148,26 144,85" fill="none" stroke="#00e5ff" stroke-width="2"/>
+                            <rect x="42" y="75" width="18" height="34" rx="7" fill="#0f172a" stroke="#00e5ff" stroke-width="2"/>
+                            <circle cx="51" cy="92" r="4" fill="#00e5ff"/>
+                            <rect x="136" y="75" width="18" height="34" rx="7" fill="#0f172a" stroke="#00e5ff" stroke-width="2"/>
+                            <circle cx="145" cy="92" r="4" fill="#00e5ff"/>
+                            <!-- Headset Mic -->
+                            <path d="M52,105 Q65,132 86,128" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="87" cy="128" r="2.5" fill="#00e5ff"/>
+                        </svg>
+                    </div>
+
+                    <!-- Right Stack: NEXUS CORE ONLINE + AGENT AKTIV + NEXUS PET -->
+                    <div class="relative z-10 ml-auto flex flex-col items-end gap-2 w-[132px]">
+                        <!-- NEXUS CORE ONLINE Widget -->
+                        <div class="w-full cyber-card-cyan rounded-xl p-2 text-center">
+                            <div class="font-cyber text-[10px] font-bold text-cyan-300 tracking-wider">NEXUS CORE</div>
+                            <div class="text-[9.5px] font-bold text-emerald-400 flex items-center justify-center gap-1 mb-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> ONLINE
+                            </div>
+                            <div class="relative w-12 h-12 mx-auto flex items-center justify-center animate-core">
+                                <div class="absolute inset-0 rounded-full border-2 border-cyan-400/40"></div>
+                                <div class="w-9 h-9 rounded-full border-2 border-dashed border-cyan-300 flex items-center justify-center">
+                                    <div class="w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_12px_#00e5ff]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AGENT AKTIV Widget (Clicks to Screen 5: KI-Agent) -->
+                        <button onclick="switchScreen('agent')" class="w-full cyber-card-cyan rounded-xl px-2.5 py-1.5 flex items-center gap-2 hover:brightness-125 transition-all text-left">
+                            <div class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300">
+                                <i class="fa-solid fa-robot text-sm"></i>
+                            </div>
+                            <div class="leading-tight">
+                                <div class="font-cyber text-[10px] font-bold text-cyan-300">AGENT</div>
+                                <div id="agentStatusBadgeText" class="font-cyber text-[10px] font-bold text-emerald-400">AKTIV</div>
+                            </div>
+                        </button>
+
+                        <!-- NEXUS PET Mini Robot Companion -->
+                        <div onclick="petInteract()" class="cursor-pointer flex flex-col items-center animate-pet group" title="Nexus Pet anklicken">
+                            <svg viewBox="0 0 80 70" class="w-16 h-14 drop-shadow-[0_0_10px_rgba(0,229,255,0.4)]">
+                                <!-- Robot Ears -->
+                                <polygon points="15,24 8,8 26,16" fill="#1e293b" stroke="#00e5ff" stroke-width="2"/>
+                                <polygon points="65,24 72,8 54,16" fill="#1e293b" stroke="#00e5ff" stroke-width="2"/>
+                                <!-- Robot Head -->
+                                <rect x="14" y="16" width="52" height="36" rx="16" fill="#e2e8f0" stroke="#38bdf8" stroke-width="2"/>
+                                <!-- Visor -->
+                                <rect x="20" y="23" width="40" height="20" rx="9" fill="#091526" stroke="#00e5ff" stroke-width="1.5"/>
+                                <!-- Glowing Eyes -->
+                                <circle cx="31" cy="33" r="4.5" fill="#00e5ff"/>
+                                <circle cx="30" cy="31.5" r="1.5" fill="#ffffff"/>
+                                <circle cx="49" cy="33" r="4.5" fill="#00e5ff"/>
+                                <circle cx="48" cy="31.5" r="1.5" fill="#ffffff"/>
+                                <!-- Happy Mouth -->
+                                <path d="M37,37 Q40,40 43,37" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
+                                <!-- Body -->
+                                <path d="M26,52 L54,52 L58,66 L22,66 Z" fill="#1e293b" stroke="#00e5ff" stroke-width="1.5"/>
+                                <circle cx="40" cy="59" r="3" fill="#00e5ff"/>
+                            </svg>
+                            <span class="px-2 py-0.5 rounded-md bg-[#09192f]/95 border border-cyan-400/60 text-[9px] font-cyber text-cyan-300 flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-paw text-[8px]"></i> NEXUS PET
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Speech Bubble Bottom Left -->
+                    <div class="relative z-10 mt-auto max-w-[200px] bg-[#081528]/95 border border-cyan-500/50 rounded-xl px-3 py-2 text-[11px] text-slate-100 shadow-[0_0_15px_rgba(0,0,0,0.7)]">
+                        <span id="operatorSpeech">Ich arbeite autonom am nächsten Zyklus ...</span>
+                    </div>
+                </div>
+
+                <!-- Aktueller Zyklus #48 Card -->
+                <div class="cyber-card p-3 space-y-2.5">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-[15px] font-bold text-white">Aktueller Zyklus #<span id="cycleNumber">48</span></h2>
+                        <span class="text-[11px] font-mono-code text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded">Auto-Loop</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs text-slate-300">
+                        <span id="cycleSubtext">Testlauf 6/10 <strong class="text-white" id="cyclePercent">60%</strong></span>
+                        <span class="flex items-center gap-1 text-slate-300 font-mono-code text-[11px]">
+                            <i class="fa-regular fa-clock text-cyan-400"></i> Laufzeit: <span id="cycleTimer">02:14:36</span>
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2 bg-[#142238] rounded-full overflow-hidden p-0.5 border border-[#1f3658]">
+                        <div id="cycleProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_10px_#00e5ff]" style="width: 60%"></div>
+                    </div>
+
+                    <!-- 6-Step Autonomous Loop Pipeline (Clickable!) -->
+                    <div class="pt-1 flex items-center justify-between text-center">
+                        <!-- Step 1 -->
+                        <div onclick="setLoopStep(1)" class="cursor-pointer flex flex-col items-center group">
+                            <div id="stepNode1" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-emerald-400 bg-emerald-950/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]">1</div>
+                            <span class="text-[9.5px] text-slate-300 mt-1">Planen</span>
+                        </div>
+                        <div class="step-line done"></div>
+
+                        <!-- Step 2 -->
+                        <div onclick="setLoopStep(2)" class="cursor-pointer flex flex-col items-center group">
+                            <div id="stepNode2" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-emerald-400 bg-emerald-950/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]">2</div>
+                            <span class="text-[9.5px] text-slate-300 mt-1">Bauen</span>
+                        </div>
+                        <div class="step-line done"></div>
+
+                        <!-- Step 3 (Active) -->
+                        <div onclick="setLoopStep(3)" class="cursor-pointer flex flex-col items-center group">
+                            <div id="stepNode3" class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-extrabold border-2 border-amber-300 bg-amber-500 text-slate-950 shadow-[0_0_14px_rgba(245,158,11,0.8)]">3</div>
+                            <span class="text-[9.5px] text-amber-300 font-semibold mt-0.5 leading-tight">Tests<br>1-10</span>
+                        </div>
+                        <div class="step-line"></div>
+
+                        <!-- Step 4 -->
+                        <div onclick="setLoopStep(4)" class="cursor-pointer flex flex-col items-center group">
+                            <div id="stepNode4" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-purple-400/70 bg-purple-950/60 text-purple-200">4</div>
+                            <span class="text-[9.5px] text-slate-300 mt-1">Fixen</span>
+                        </div>
+                        <div class="step-line"></div>
+
+                        <!-- Step 5 -->
+                        <div onclick="setLoopStep(5)" class="cursor-pointer flex flex-col items-center group">
+                            <div id="stepNode5" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-purple-400/70 bg-purple-950/60 text-purple-200">5</div>
+                            <span class="text-[9.5px] text-slate-300 mt-0.5 leading-tight">Tests<br>11-20</span>
+                        </div>
+                        <div class="step-line"></div>
+
+                        <!-- Step 6 -->
+                        <div onclick="setLoopStep(6)" class="cursor-pointer flex flex-col items-center group">
+                            <div id="stepNode6" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-purple-400/70 bg-purple-950/60 text-purple-200">6</div>
+                            <span class="text-[9.5px] text-slate-300 mt-1">Loop</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- START / PAUSE / STOPP Buttons -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="btnLoopStart" onclick="controlLoop('start')" class="py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-500 to-green-400 text-slate-950 shadow-[0_0_16px_rgba(16,185,129,0.5)] hover:brightness-110 active:scale-95 transition-all">
+                        <i class="fa-solid fa-play"></i> START
+                    </button>
+                    <button id="btnLoopPause" onclick="controlLoop('pause')" class="py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-[#1b1910] border border-amber-500/80 text-amber-400 hover:bg-amber-500/10 active:scale-95 transition-all">
+                        <i class="fa-solid fa-pause"></i> PAUSE
+                    </button>
+                    <button id="btnLoopStop" onclick="controlLoop('stop')" class="py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-[#221117] border border-rose-500/80 text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all">
+                        <i class="fa-solid fa-stop"></i> STOPP
+                    </button>
+                </div>
+
+                <!-- 4 Hardware Telemetry Mini Cards -->
+                <div class="grid grid-cols-4 gap-1.5 pt-0.5">
+                    <div class="cyber-card p-2 text-center">
+                        <div class="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-microchip text-cyan-400"></i> CPU
+                        </div>
+                        <div id="statCpu" class="text-xs font-bold text-emerald-400 mt-0.5">68%</div>
+                        <div class="w-full h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                            <div id="barCpu" class="h-full bg-emerald-400" style="width: 68%"></div>
+                        </div>
+                    </div>
+                    <div class="cyber-card p-2 text-center">
+                        <div class="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-memory text-cyan-400"></i> RAM
+                        </div>
+                        <div id="statRam" class="text-[11px] font-bold text-emerald-400 mt-0.5">3.2 / 8 GB</div>
+                        <div class="w-full h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-emerald-400" style="width: 42%"></div>
+                        </div>
+                    </div>
+                    <div class="cyber-card p-2 text-center">
+                        <div class="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-folder-closed text-cyan-400"></i> Speicher
+                        </div>
+                        <div class="text-[10px] font-bold text-emerald-400 mt-0.5">24 / 64 GB</div>
+                        <div class="w-full h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-emerald-400" style="width: 38%"></div>
+                        </div>
+                    </div>
+                    <div class="cyber-card p-2 text-center">
+                        <div class="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-battery-full text-emerald-400"></i> Akku
+                        </div>
+                        <div class="text-xs font-bold text-emerald-400 mt-0.5">100%</div>
+                        <div class="w-full h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-emerald-400" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="h-14 bg-[#070d19] border-t border-[#182b49] grid grid-cols-5 items-center text-[10px] text-slate-400">
+                <button onclick="switchScreen('dashboard')" class="flex flex-col items-center justify-center gap-0.5 text-cyan-400 font-semibold">
+                    <i class="fa-solid fa-house text-base drop-shadow-[0_0_8px_#00e5ff]"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchScreen('projekte')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-folder text-base"></i>
+                    <span>Projekte</span>
+                </button>
+                <button onclick="switchScreen('tests')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-bullseye text-base"></i>
+                    <span>Tests</span>
+                </button>
+                <button onclick="switchScreen('logs')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-file-lines text-base"></i>
+                    <span>Logs</span>
+                </button>
+                <button onclick="switchScreen('settings')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-gear text-base"></i>
+                    <span>Einstellungen</span>
+                </button>
+            </nav>
+        </section>
+
+        <!-- ===================================================================
+             SCREEN 2: PROJEKTE (Projekt MeinGame)
+             =================================================================== -->
+        <section id="screen-projekte" class="phone-frame hidden" data-screen="projekte">
+            <!-- Status Bar -->
+            <div class="px-5 pt-2.5 pb-1 flex justify-between items-center text-[12px] font-semibold text-slate-200">
+                <span class="live-clock">18:37</span>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                    <i class="fa-solid fa-bell-slash text-slate-400"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-signal"></i>
+                    <span class="text-emerald-400 flex items-center gap-0.5"><i class="fa-solid fa-battery-full"></i> 100%</span>
+                </div>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scroll px-3.5 py-2 space-y-3">
+                <!-- Project Header -->
+                <div class="flex items-center gap-3 pt-1">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-400/50 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.25)]">
+                        <i class="fa-solid fa-folder-open text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-300">Projekt</div>
+                        <h2 class="text-lg font-bold text-white leading-tight" id="projectTitle">MeinGame</h2>
+                        <div class="text-[10.5px] font-mono-code text-slate-400" id="projectPath">/storage/emulated/0/Projekte/MeinGame</div>
+                    </div>
+                </div>
+
+                <!-- Sub-Tabs (Übersicht | Build | Tests | Git) -->
+                <div class="grid grid-cols-4 bg-[#0a1324] p-1 rounded-xl border border-[#1b2f4e] text-xs font-medium">
+                    <button onclick="switchProjectTab('uebersicht')" id="projTab-uebersicht" class="py-1.5 rounded-lg bg-blue-600 text-white font-semibold shadow">Übersicht</button>
+                    <button onclick="switchProjectTab('build')" id="projTab-build" class="py-1.5 rounded-lg text-slate-300 hover:text-white">Build</button>
+                    <button onclick="switchProjectTab('tests')" id="projTab-tests" class="py-1.5 rounded-lg text-slate-300 hover:text-white">Tests</button>
+                    <button onclick="switchProjectTab('git')" id="projTab-git" class="py-1.5 rounded-lg text-slate-300 hover:text-white">Git</button>
+                </div>
+
+                <!-- Projekt-Infos Card -->
+                <div class="cyber-card p-3.5 space-y-2.5">
+                    <h3 class="text-sm font-bold text-white border-b border-[#1b2e4b] pb-1.5">Projekt-Infos</h3>
+                    <div id="projectInfoContent" class="space-y-1.5 text-xs">
+                        <div class="flex justify-between py-0.5 border-b border-slate-800/70">
+                            <span class="text-slate-400">Typ</span>
+                            <span class="text-slate-100 font-medium">Android App / Game</span>
+                        </div>
+                        <div class="flex justify-between py-0.5 border-b border-slate-800/70">
+                            <span class="text-slate-400">Engine</span>
+                            <span class="text-slate-100 font-medium">Unity (Gradle)</span>
+                        </div>
+                        <div class="flex justify-between py-0.5 border-b border-slate-800/70">
+                            <span class="text-slate-400">Status</span>
+                            <span class="text-emerald-400 font-semibold">Aktiv</span>
+                        </div>
+                        <div class="flex justify-between py-0.5 border-b border-slate-800/70">
+                            <span class="text-slate-400">Branch</span>
+                            <span class="text-cyan-400 font-mono-code">nexus-dev-48</span>
+                        </div>
+                        <div class="flex justify-between py-0.5 border-b border-slate-800/70">
+                            <span class="text-slate-400">Letzter Commit</span>
+                            <span class="text-slate-200 font-mono-code text-[11px]"><strong class="text-cyan-300">a3f21c7</strong> - Fix InputManager</span>
+                        </div>
+                        <div class="flex justify-between items-start pt-0.5">
+                            <span class="text-slate-400">Ziel</span>
+                            <span class="text-slate-200 text-right max-w-[200px]">Performance verbessern, Bugs beheben, neue Features</span>
+                        </div>
+                    </div>
+
+                    <!-- Cyberpunk Outrun Racing Game Preview Banner -->
+                    <div class="relative rounded-xl overflow-hidden border border-cyan-500/40 h-36 bg-[#090418] shadow-[0_0_15px_rgba(170,0,255,0.25)] group">
+                        <svg viewBox="0 0 320 150" class="w-full h-full object-cover">
+                            <defs>
+                                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#0f0529"/>
+                                    <stop offset="55%" stop-color="#4c1d95"/>
+                                    <stop offset="85%" stop-color="#ec4899"/>
+                                    <stop offset="100%" stop-color="#f59e0b"/>
+                                </linearGradient>
+                                <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#1e1b4b"/>
+                                    <stop offset="100%" stop-color="#090d16"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Synthwave Sky -->
+                            <rect width="320" height="90" fill="url(#skyGrad)"/>
+                            <!-- Retro Sun -->
+                            <circle cx="155" cy="72" r="26" fill="#fde047" opacity="0.9"/>
+                            <!-- City Skyline -->
+                            <rect x="10" y="35" width="18" height="55" fill="#1e1b4b"/>
+                            <rect x="32" y="45" width="14" height="45" fill="#311042"/>
+                            <rect x="52" y="25" width="22" height="65" fill="#1e1b4b"/>
+                            <rect x="235" y="30" width="24" height="60" fill="#1e1b4b"/>
+                            <rect x="264" y="42" width="18" height="48" fill="#311042"/>
+                            <rect x="288" y="20" width="22" height="70" fill="#1e1b4b"/>
+                            <!-- Highway Road -->
+                            <rect y="90" width="320" height="60" fill="url(#roadGrad)"/>
+                            <!-- Neon Grid Lines -->
+                            <line x1="155" y1="90" x2="20" y2="150" stroke="#00e5ff" stroke-width="1.5" opacity="0.7"/>
+                            <line x1="155" y1="90" x2="95" y2="150" stroke="#ec4899" stroke-width="2"/>
+                            <line x1="155" y1="90" x2="155" y2="150" stroke="#fde047" stroke-width="1.5" stroke-dasharray="6 4"/>
+                            <line x1="155" y1="90" x2="225" y2="150" stroke="#ec4899" stroke-width="2"/>
+                            <line x1="155" y1="90" x2="300" y2="150" stroke="#00e5ff" stroke-width="1.5" opacity="0.7"/>
+                            <!-- Futuristic Sports Car Rear View -->
+                            <g transform="translate(155, 102)">
+                                <!-- Car Shadow / Underglow -->
+                                <ellipse cx="35" cy="30" rx="48" ry="8" fill="#ff0055" opacity="0.45"/>
+                                <!-- Car Body -->
+                                <path d="M-5,26 L8,8 L62,8 L75,26 L70,32 L0,32 Z" fill="#111827" stroke="#38bdf8" stroke-width="1.2"/>
+                                <!-- Cabin -->
+                                <path d="M14,8 L24,-2 L48,-2 L56,8 Z" fill="#1e293b" stroke="#ec4899" stroke-width="1"/>
+                                <!-- Glowing Taillights -->
+                                <rect x="3" y="16" width="18" height="5" rx="2" fill="#ff1744"/>
+                                <rect x="49" y="16" width="18" height="5" rx="2" fill="#ff1744"/>
+                                <line x1="21" y1="18" x2="49" y2="18" stroke="#ff1744" stroke-width="2"/>
+                                <!-- Exhaust Glow -->
+                                <circle cx="26" cy="27" r="3" fill="#00e5ff"/>
+                                <circle cx="44" cy="27" r="3" fill="#00e5ff"/>
+                                <!-- Wheels -->
+                                <rect x="-2" y="22" width="11" height="12" rx="2" fill="#020617"/>
+                                <rect x="61" y="22" width="11" height="12" rx="2" fill="#020617"/>
+                            </g>
+                        </svg>
+                        <div class="absolute bottom-2 left-2.5 right-2.5 flex justify-between items-center text-[10px] bg-slate-950/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
+                            <span class="text-cyan-300 font-semibold"><i class="fa-solid fa-gamepad mr-1"></i> Scene: Level_02_NeonHighway.unity</span>
+                            <span class="text-emerald-400 font-mono-code">60 FPS Target</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projekt-Aktionen (6 Interactive Buttons) -->
+                <div class="space-y-2">
+                    <h3 class="text-sm font-bold text-white px-1">Projekt-Aktionen</h3>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-medium">
+                        <button onclick="openProjectModal('files')" class="cyber-card p-2.5 flex items-center gap-2.5 hover:border-cyan-400 transition-all text-left">
+                            <i class="fa-solid fa-folder text-blue-400 text-base"></i>
+                            <span>Ordner öffnen</span>
+                        </button>
+                        <button onclick="openProjectModal('terminal')" class="cyber-card p-2.5 flex items-center gap-2.5 hover:border-cyan-400 transition-all text-left">
+                            <i class="fa-solid fa-terminal text-cyan-400 text-base"></i>
+                            <span>Terminal</span>
+                        </button>
+                        <button onclick="triggerActionToast('Gradle Build für MeinGame gestartet (ARM64)...', 'CODE')" class="cyber-card p-2.5 flex items-center gap-2.5 hover:border-cyan-400 transition-all text-left">
+                            <i class="fa-solid fa-download text-cyan-400 text-base"></i>
+                            <span>Build starten</span>
+                        </button>
+                        <button onclick="triggerActionToast('MeinGame-debug-v48.apk wird im Sandbox-Container installiert...', 'TEST')" class="cyber-card p-2.5 flex items-center gap-2.5 hover:border-emerald-400 transition-all text-left">
+                            <i class="fa-solid fa-box-archive text-emerald-400 text-base"></i>
+                            <span>APK installieren</span>
+                        </button>
+                        <button onclick="switchScreen('tests')" class="cyber-card p-2.5 flex items-center gap-2.5 hover:border-cyan-400 transition-all text-left">
+                            <i class="fa-solid fa-sliders text-cyan-400 text-base"></i>
+                            <span>Tests konfigurieren</span>
+                        </button>
+                        <button onclick="cycleProjectSwitch()" class="cyber-card p-2.5 flex items-center gap-2.5 hover:border-cyan-400 transition-all text-left">
+                            <i class="fa-solid fa-arrows-left-right text-cyan-400 text-base"></i>
+                            <span>Projekt wechseln</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="h-14 bg-[#070d19] border-t border-[#182b49] grid grid-cols-5 items-center text-[10px] text-slate-400">
+                <button onclick="switchScreen('dashboard')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-house text-base"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchScreen('projekte')" class="flex flex-col items-center justify-center gap-0.5 text-blue-400 font-semibold">
+                    <i class="fa-solid fa-folder text-base drop-shadow-[0_0_8px_#3b82f6]"></i>
+                    <span>Projekte</span>
+                </button>
+                <button onclick="switchScreen('tests')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-bullseye text-base"></i>
+                    <span>Tests</span>
+                </button>
+                <button onclick="switchScreen('logs')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-file-lines text-base"></i>
+                    <span>Logs</span>
+                </button>
+                <button onclick="switchScreen('settings')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-gear text-base"></i>
+                    <span>Einstellungen</span>
+                </button>
+            </nav>
+        </section>
+
+        <!-- ===================================================================
+             SCREEN 3: GAMEPLAY-TESTS
+             =================================================================== -->
+        <section id="screen-tests" class="phone-frame hidden" data-screen="tests">
+            <!-- Status Bar -->
+            <div class="px-5 pt-2.5 pb-1 flex justify-between items-center text-[12px] font-semibold text-slate-200">
+                <span class="live-clock">18:38</span>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                    <i class="fa-solid fa-bell-slash text-slate-400"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-signal"></i>
+                    <span class="text-emerald-400 flex items-center gap-0.5"><i class="fa-solid fa-battery-full"></i> 100%</span>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-4 py-2 flex items-center gap-2.5 border-b border-[#15253f]">
+                <div class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-purple-300">
+                    <i class="fa-solid fa-arrows-spin text-sm"></i>
+                </div>
+                <h2 class="text-base font-bold text-white">Gameplay-Tests</h2>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scroll px-3.5 py-2.5 space-y-2.5">
+                <!-- Phase 1 / Phase 2 Switcher -->
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btnPhase1" onclick="switchTestPhase(1)" class="py-1.5 px-3 rounded-xl border border-emerald-400 bg-emerald-950/50 text-center shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                        <div class="text-xs font-bold text-white">Phase 1</div>
+                        <div class="text-[10px] text-emerald-300">Tests 1-10</div>
+                    </button>
+                    <button id="btnPhase2" onclick="switchTestPhase(2)" class="py-1.5 px-3 rounded-xl border border-[#1d3252] bg-[#0b1322] text-center hover:border-slate-600">
+                        <div class="text-xs font-bold text-slate-300">Phase 2</div>
+                        <div class="text-[10px] text-slate-400">Tests 11-20</div>
+                    </button>
+                </div>
+
+                <!-- 10 Tests List -->
+                <div id="testsListContainer" class="cyber-card divide-y divide-slate-800/80 text-xs overflow-hidden">
+                    <!-- Rendered dynamically via JS -->
+                </div>
+
+                <!-- Action Buttons -->
+                <button onclick="runRemainingTests()" class="w-full py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 border border-purple-400/60 shadow-[0_0_15px_rgba(147,51,234,0.4)] hover:brightness-110 active:scale-98 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Automatisch testen (10 Läufe)
+                </button>
+
+                <button onclick="triggerActionToast('Test-Parameter: FPS-Schwelle=30, Timeout=60s, Monkey-Inputs=Aktiv', 'TEST')" class="w-full py-2 rounded-xl font-semibold text-xs text-slate-200 bg-[#0d182c] border border-[#233b60] hover:border-cyan-400 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-gear text-cyan-400"></i> Tests konfigurieren
+                </button>
+
+                <!-- Test-Statistiken Card -->
+                <div class="cyber-card p-3">
+                    <h3 class="text-xs font-bold text-white mb-2">Test-Statistiken</h3>
+                    <div class="flex items-center justify-between px-2">
+                        <!-- Circular Donut Chart -->
+                        <div class="relative w-24 h-24 flex items-center justify-center">
+                            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-slate-800" stroke-width="3.8" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="testDonutArc" class="text-emerald-400 transition-all duration-500" stroke-dasharray="50, 100" stroke-width="3.8" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <span id="testDonutLabel" class="text-base font-extrabold text-white leading-none">5/10</span>
+                                <span class="text-[9.5px] text-slate-400 mt-0.5">bestanden</span>
+                            </div>
+                        </div>
+
+                        <!-- Legend Breakdown -->
+                        <div class="space-y-1.5 text-xs w-36">
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Bestanden</span>
+                                <strong id="countPassed" class="text-emerald-400">5</strong>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Warnungen</span>
+                                <strong id="countWarn" class="text-amber-400">1</strong>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Fehler</span>
+                                <strong id="countError" class="text-rose-400">0</strong>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span> Offen</span>
+                                <strong id="countOpen" class="text-slate-300">4</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="h-14 bg-[#070d19] border-t border-[#182b49] grid grid-cols-5 items-center text-[10px] text-slate-400">
+                <button onclick="switchScreen('dashboard')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-house text-base"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchScreen('projekte')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-folder text-base"></i>
+                    <span>Projekte</span>
+                </button>
+                <button onclick="switchScreen('tests')" class="flex flex-col items-center justify-center gap-0.5 text-blue-400 font-semibold">
+                    <i class="fa-solid fa-bullseye text-base drop-shadow-[0_0_8px_#3b82f6]"></i>
+                    <span>Tests</span>
+                </button>
+                <button onclick="switchScreen('logs')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-file-lines text-base"></i>
+                    <span>Logs</span>
+                </button>
+                <button onclick="switchScreen('settings')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-gear text-base"></i>
+                    <span>Einstellungen</span>
+                </button>
+            </nav>
+        </section>
+
+        <!-- ===================================================================
+             SCREEN 4: LIVE-LOGS
+             =================================================================== -->
+        <section id="screen-logs" class="phone-frame hidden" data-screen="logs">
+            <!-- Status Bar -->
+            <div class="px-5 pt-2.5 pb-1 flex justify-between items-center text-[12px] font-semibold text-slate-200">
+                <span class="live-clock">18:39</span>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                    <i class="fa-solid fa-bell-slash text-slate-400"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-signal"></i>
+                    <span class="text-emerald-400 flex items-center gap-0.5"><i class="fa-solid fa-battery-full"></i> 100%</span>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-4 py-2 flex items-center justify-between border-b border-[#15253f]">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-purple-300">
+                        <i class="fa-solid fa-satellite-dish text-sm"></i>
+                    </div>
+                    <h2 class="text-base font-bold text-white">Live-Logs</h2>
+                </div>
+                <button onclick="addSimulatedLog()" class="px-2.5 py-1 rounded-lg bg-[#101c31] border border-[#233b60] text-xs text-slate-200 flex items-center gap-1.5 hover:border-cyan-400">
+                    <i class="fa-solid fa-filter text-cyan-400 text-[10px]"></i> Filter
+                </button>
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="px-3.5 pt-2.5 pb-1 flex items-center gap-1.5 overflow-x-auto text-[11px]">
+                <button onclick="filterLogs('ALL')" data-logfilter="ALL" class="log-filter-btn px-3 py-1 rounded-full font-semibold bg-blue-600 text-white shadow">Alle</button>
+                <button onclick="filterLogs('PLAN')" data-logfilter="PLAN" class="log-filter-btn px-2.5 py-1 rounded-full bg-[#101c30] text-slate-300 border border-slate-700">Plan</button>
+                <button onclick="filterLogs('CODE')" data-logfilter="CODE" class="log-filter-btn px-2.5 py-1 rounded-full bg-[#101c30] text-slate-300 border border-slate-700">Build</button>
+                <button onclick="filterLogs('TEST')" data-logfilter="TEST" class="log-filter-btn px-2.5 py-1 rounded-full bg-[#101c30] text-slate-300 border border-slate-700">Test</button>
+                <button onclick="filterLogs('FIX')" data-logfilter="FIX" class="log-filter-btn px-2.5 py-1 rounded-full bg-[#101c30] text-slate-300 border border-slate-700">Fix</button>
+                <button onclick="filterLogs('WARN')" data-logfilter="WARN" class="log-filter-btn px-2.5 py-1 rounded-full bg-[#101c30] text-slate-300 border border-slate-700">System</button>
+            </div>
+
+            <!-- Live Stream Log Entries -->
+            <div id="logListContainer" class="flex-1 overflow-y-auto custom-scroll px-3.5 py-2 space-y-2 text-xs">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <!-- Log Detail Inspector Drawer / Box -->
+            <div class="px-3.5 pb-2.5 pt-1">
+                <div id="logDetailBox" class="cyber-card px-3 py-2 flex items-center justify-between text-xs text-slate-400 cursor-pointer hover:border-cyan-400" onclick="showSelectedLogDetails()">
+                    <span id="logDetailPreview" class="truncate">Log-Details anzeigen ... (Eintrag antippen)</span>
+                    <i class="fa-solid fa-expand text-cyan-400 ml-2"></i>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="h-14 bg-[#070d19] border-t border-[#182b49] grid grid-cols-5 items-center text-[10px] text-slate-400">
+                <button onclick="switchScreen('dashboard')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-house text-base"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchScreen('projekte')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-folder text-base"></i>
+                    <span>Projekte</span>
+                </button>
+                <button onclick="switchScreen('tests')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-bullseye text-base"></i>
+                    <span>Tests</span>
+                </button>
+                <button onclick="switchScreen('logs')" class="flex flex-col items-center justify-center gap-0.5 text-blue-400 font-semibold">
+                    <i class="fa-solid fa-file-lines text-base drop-shadow-[0_0_8px_#3b82f6]"></i>
+                    <span>Logs</span>
+                </button>
+                <button onclick="switchScreen('settings')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-gear text-base"></i>
+                    <span>Einstellungen</span>
+                </button>
+            </nav>
+        </section>
+
+        <!-- ===================================================================
+             SCREEN 5: KI-AGENT
+             =================================================================== -->
+        <section id="screen-agent" class="phone-frame hidden" data-screen="agent">
+            <!-- Status Bar -->
+            <div class="px-5 pt-2.5 pb-1 flex justify-between items-center text-[12px] font-semibold text-slate-200">
+                <span class="live-clock">18:40</span>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                    <i class="fa-solid fa-bell-slash text-slate-400"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-signal"></i>
+                    <span class="text-emerald-400 flex items-center gap-0.5"><i class="fa-solid fa-battery-full"></i> 100%</span>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-4 py-2 flex items-center justify-between border-b border-[#15253f]">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-300">
+                        <i class="fa-solid fa-brain text-sm"></i>
+                    </div>
+                    <h2 class="text-base font-bold text-white">KI-Agent</h2>
+                </div>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.25)]">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AKTIV
+                </span>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scroll px-3.5 py-2.5 space-y-3">
+                <!-- Mode Tabs: Planung | Codierung | Analyse | Reparatur -->
+                <div class="grid grid-cols-4 gap-1.5 text-xs">
+                    <button onclick="switchAgentSubTab('planung')" id="agentTab-planung" class="py-1.5 rounded-lg bg-blue-600 text-white font-semibold shadow">Planung</button>
+                    <button onclick="switchAgentSubTab('codierung')" id="agentTab-codierung" class="py-1.5 rounded-lg bg-[#0d1729] border border-[#1f3456] text-slate-300 hover:text-white">Codierung</button>
+                    <button onclick="switchAgentSubTab('analyse')" id="agentTab-analyse" class="py-1.5 rounded-lg bg-[#0d1729] border border-[#1f3456] text-slate-300 hover:text-white">Analyse</button>
+                    <button onclick="switchAgentSubTab('reparatur')" id="agentTab-reparatur" class="py-1.5 rounded-lg bg-[#0d1729] border border-[#1f3456] text-slate-300 hover:text-white">Reparatur</button>
+                </div>
+
+                <!-- Aktuelle Aufgabe Card -->
+                <div class="cyber-card p-3 space-y-2.5">
+                    <h3 class="text-xs font-bold text-white border-b border-slate-800 pb-1.5">Aktuelle Aufgabe</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-purple-950/80 border border-purple-400/60 flex items-center justify-center text-purple-300 shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.25)]">
+                            <i class="fa-solid fa-crosshairs text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div id="agentTaskTitle" class="text-xs font-semibold text-slate-100">Bugfix: FPS-Drops im Level 2 beheben</div>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div id="agentTaskBar" class="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full transition-all duration-300" style="width: 70%"></div>
+                                </div>
+                                <span id="agentTaskPercent" class="text-xs font-bold text-slate-200">70%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Sub-Tab Content Area (Nächste Schritte / Live Code Diff) -->
+                <div id="agentStepsCard" class="cyber-card p-3 space-y-2.5">
+                    <h3 class="text-xs font-bold text-white border-b border-slate-800 pb-1.5">Nächste Schritte</h3>
+                    <div id="agentStepsList" class="space-y-2 text-xs">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">1</span>
+                            <span class="text-slate-200">Profiling der Szene durchführen</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">2</span>
+                            <span class="text-slate-200">Objekte mit hoher Polygonzahl optimieren</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">3</span>
+                            <span class="text-slate-200">Kollisionsabfragen reduzieren</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">4</span>
+                            <span class="text-slate-200">Testlauf 7/10 starten</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KI Modell Selector Card -->
+                <div class="cyber-card p-3 space-y-2">
+                    <h3 class="text-xs font-bold text-white border-b border-slate-800 pb-1.5">KI Modell</h3>
+                    
+                    <div class="divide-y divide-slate-800/70 text-xs">
+                        <!-- Ollama (Lokal) + qwen2.5 -->
+                        <div onclick="selectAiModel('ollama')" class="py-2 flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <span id="radio-ollama" class="w-4 h-4 rounded-full bg-emerald-400 border-2 border-emerald-200 shadow-[0_0_8px_#10b981] inline-block"></span>
+                                <span class="font-medium text-white">Ollama (Lokal)</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 text-[10.5px] flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> qwen2.5 (aktiv)
+                            </span>
+                        </div>
+
+                        <!-- DeepSeek-R1 -->
+                        <div onclick="selectAiModel('deepseek')" class="py-2 flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <span id="radio-deepseek" class="w-4 h-4 rounded-full border border-slate-500 inline-block"></span>
+                                <span class="text-slate-200">DeepSeek-R1</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-mono-code">Reasoning 7B</span>
+                        </div>
+
+                        <!-- Llama 3 -->
+                        <div onclick="selectAiModel('llama3')" class="py-2 flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <span id="radio-llama3" class="w-4 h-4 rounded-full border border-slate-500 inline-block"></span>
+                                <span class="text-slate-200">Llama 3</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-mono-code">8B Instruct</span>
+                        </div>
+
+                        <!-- OpenCode -->
+                        <div onclick="selectAiModel('opencode')" class="py-2 flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <span id="radio-opencode" class="text-purple-400 font-mono-code font-bold text-xs">&lt;/&gt;</span>
+                                <span class="text-slate-200 font-medium">OpenCode</span>
+                            </div>
+                            <span class="text-[10px] text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2 py-0.5 rounded">CLI Agent</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="h-14 bg-[#070d19] border-t border-[#182b49] grid grid-cols-5 items-center text-[10px] text-slate-400">
+                <button onclick="switchScreen('dashboard')" class="flex flex-col items-center justify-center gap-0.5 text-cyan-400 font-semibold">
+                    <i class="fa-solid fa-house text-base drop-shadow-[0_0_8px_#00e5ff]"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchScreen('projekte')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-folder text-base"></i>
+                    <span>Projekte</span>
+                </button>
+                <button onclick="switchScreen('tests')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-bullseye text-base"></i>
+                    <span>Tests</span>
+                </button>
+                <button onclick="switchScreen('logs')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-file-lines text-base"></i>
+                    <span>Logs</span>
+                </button>
+                <button onclick="switchScreen('settings')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-gear text-base"></i>
+                    <span>Einstellungen</span>
+                </button>
+            </nav>
+        </section>
+
+        <!-- ===================================================================
+             SCREEN 6: EINSTELLUNGEN
+             =================================================================== -->
+        <section id="screen-settings" class="phone-frame hidden" data-screen="settings">
+            <!-- Status Bar -->
+            <div class="px-5 pt-2.5 pb-1 flex justify-between items-center text-[12px] font-semibold text-slate-200">
+                <span class="live-clock">18:41</span>
+                <div class="flex items-center gap-1.5 text-[11px]">
+                    <i class="fa-solid fa-bell-slash text-slate-400"></i>
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-signal"></i>
+                    <span class="text-emerald-400 flex items-center gap-0.5"><i class="fa-solid fa-battery-full"></i> 100%</span>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-4 py-2 flex items-center gap-2.5 border-b border-[#15253f]">
+                <i class="fa-solid fa-gear text-slate-300 text-base"></i>
+                <h2 class="text-base font-bold text-white">Einstellungen</h2>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto custom-scroll px-3.5 py-2.5 space-y-2.5">
+                <!-- Sub-Tabs -->
+                <div class="grid grid-cols-4 gap-1.5 text-xs">
+                    <button class="py-1.5 rounded-lg bg-blue-600 text-white font-semibold shadow">Allgemein</button>
+                    <button onclick="switchScreen('agent')" class="py-1.5 rounded-lg bg-[#0d1729] border border-[#1f3456] text-slate-300 hover:text-white">Modelle</button>
+                    <button onclick="switchScreen('tests')" class="py-1.5 rounded-lg bg-[#0d1729] border border-[#1f3456] text-slate-300 hover:text-white">Tests</button>
+                    <button class="py-1.5 rounded-lg bg-[#0d1729] border border-[#1f3456] text-slate-300 hover:text-white">Sicherheit</button>
+                </div>
+
+                <!-- Laufzeit Card -->
+                <div class="cyber-card p-3 space-y-2.5 text-xs">
+                    <h3 class="font-bold text-white border-b border-slate-800 pb-1">Laufzeit</h3>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-rotate text-emerald-400 text-sm"></i>
+                            <div>
+                                <div class="font-semibold text-white">24/7 Modus</div>
+                                <div class="text-[10px] text-slate-400">Automatisch neu starten bei Fehlern</div>
+                            </div>
+                        </div>
+                        <div onclick="this.classList.toggle('active')" class="cyber-switch active"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                        <span class="text-slate-300">› Max. Zyklus-Dauer</span>
+                        <select class="bg-[#101c31] border border-[#27426b] rounded-lg px-2 py-1 text-xs text-slate-100 outline-none">
+                            <option>6 Stunden</option>
+                            <option>12 Stunden</option>
+                            <option>24 Stunden (Endlos)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                        <span class="text-slate-300">Pausen zwischen Zyklen</span>
+                        <select class="bg-[#101c31] border border-[#27426b] rounded-lg px-2 py-1 text-xs text-slate-100 outline-none">
+                            <option>10 Minuten</option>
+                            <option>5 Minuten</option>
+                            <option>Keine Pause</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Ressourcen-Limits Card -->
+                <div class="cyber-card p-3 space-y-2 text-xs">
+                    <h3 class="font-bold text-white border-b border-slate-800 pb-1">Ressourcen-Limits</h3>
+                    
+                    <div class="flex items-center justify-between py-0.5">
+                        <span class="text-slate-300">› Max. CPU Nutzung</span>
+                        <select class="bg-[#101c31] border border-[#27426b] rounded-lg px-2.5 py-1 text-xs text-slate-100 outline-none">
+                            <option>80 %</option>
+                            <option>65 %</option>
+                            <option>95 %</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between py-0.5 border-t border-slate-800/80">
+                        <span class="text-slate-300">› Max. RAM Nutzung</span>
+                        <select class="bg-[#101c31] border border-[#27426b] rounded-lg px-2.5 py-1 text-xs text-slate-100 outline-none">
+                            <option>6 GB</option>
+                            <option>4 GB</option>
+                            <option>7 GB</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between py-0.5 border-t border-slate-800/80">
+                        <span class="text-slate-300">› Max. Speicher</span>
+                        <select class="bg-[#101c31] border border-[#27426b] rounded-lg px-2.5 py-1 text-xs text-slate-100 outline-none">
+                            <option>20 GB</option>
+                            <option>32 GB</option>
+                            <option>50 GB</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Sicherheitsgrenzen Card -->
+                <div class="cyber-card p-3 space-y-2 text-xs">
+                    <h3 class="font-bold text-white border-b border-slate-800 pb-1">Sicherheitsgrenzen</h3>
+
+                    <div class="flex items-center justify-between py-0.5">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i class="fa-solid fa-code-branch text-emerald-400 w-4"></i> Nur in Dev-Branch committen
+                        </span>
+                        <div onclick="this.classList.toggle('active')" class="cyber-switch active"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between py-0.5 border-t border-slate-800/80">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i class="fa-solid fa-shield-halved text-emerald-400 w-4"></i> Kein Push ohne Freigabe
+                        </span>
+                        <div onclick="this.classList.toggle('active')" class="cyber-switch active"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between py-0.5 border-t border-slate-800/80">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i class="fa-solid fa-lock text-amber-400 w-4"></i> Geschützte Dateien
+                        </span>
+                        <div onclick="this.classList.toggle('active')" class="cyber-switch active"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between py-0.5 border-t border-slate-800/80">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i class="fa-solid fa-cube text-emerald-400 w-4"></i> Sandbox für Code-Ausführung
+                        </span>
+                        <div onclick="this.classList.toggle('active')" class="cyber-switch active"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                        <span class="flex items-center gap-2 text-slate-200">
+                            <i class="fa-solid fa-screwdriver-wrench text-amber-400 w-4"></i> Max. Reparaturversuche
+                        </span>
+                        <select class="bg-[#101c31] border border-[#27426b] rounded-lg px-2.5 py-1 text-xs text-slate-100 outline-none">
+                            <option>3</option>
+                            <option>5</option>
+                            <option>1</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="h-14 bg-[#070d19] border-t border-[#182b49] grid grid-cols-5 items-center text-[10px] text-slate-400">
+                <button onclick="switchScreen('dashboard')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-house text-base"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchScreen('projekte')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-folder text-base"></i>
+                    <span>Projekte</span>
+                </button>
+                <button onclick="switchScreen('tests')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-bullseye text-base"></i>
+                    <span>Tests</span>
+                </button>
+                <button onclick="switchScreen('logs')" class="flex flex-col items-center justify-center gap-0.5 hover:text-slate-200">
+                    <i class="fa-solid fa-file-lines text-base"></i>
+                    <span>Logs</span>
+                </button>
+                <button onclick="switchScreen('settings')" class="flex flex-col items-center justify-center gap-0.5 text-blue-400 font-semibold">
+                    <i class="fa-solid fa-gear text-base drop-shadow-[0_0_8px_#3b82f6]"></i>
+                    <span>Einstellungen</span>
+                </button>
+            </nav>
+        </section>
+
+    </main>
+
+    <!-- ===================================================================
+         INTERACTIVE MODAL (Terminal / File Explorer / Log Stacktrace)
+         =================================================================== -->
+    <div id="cyberModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="w-full max-w-md cyber-card-cyan rounded-2xl overflow-hidden shadow-2xl border border-cyan-400">
+            <div class="px-4 py-2.5 bg-[#071426] border-b border-cyan-500/40 flex items-center justify-between">
+                <span id="modalTitle" class="font-cyber text-xs font-bold text-cyan-300">NEXUS TERMINAL // OPENCODE</span>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div id="modalBody" class="p-4 font-mono-code text-xs text-slate-200 max-h-80 overflow-y-auto custom-scroll space-y-2 bg-[#050b14]">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="px-4 py-2 bg-[#071426] border-t border-cyan-500/30 flex justify-end">
+                <button onclick="closeModal()" class="px-3 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/30">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Notification Toast -->
+    <div id="cyberToast" class="fixed bottom-5 right-5 z-50 hidden bg-[#091526]/95 border border-cyan-400 text-slate-100 px-4 py-2.5 rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.35)] text-xs flex items-center gap-2.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+        <span id="cyberToastText">Aktion ausgeführt</span>
+    </div>
+
+    <script>
+        // --- APPLICATION STATE ---
+        let layoutMode = 'single'; // 'single' or 'grid'
+        let activeScreen = 'dashboard';
+        let loopRunning = true;
+        let currentStep = 3;
+        let elapsedSeconds = 2 * 3600 + 14 * 60 + 36; // 02:14:36
+        let currentLogFilter = 'ALL';
+        let selectedLogItem = null;
+
+        // Test Suite Data (Screen 3)
+        const testDataPhase1 = [
+            { id: 1, name: 'Start & Menü', time: '00:32', status: 'OK' },
+            { id: 2, name: 'Level Laden', time: '00:28', status: 'OK' },
+            { id: 3, name: 'Steuerung', time: '00:45', status: 'OK' },
+            { id: 4, name: 'Spielregeln', time: '00:51', status: 'WARN' },
+            { id: 5, name: 'Kollisionen', time: '00:37', status: 'OK' },
+            { id: 6, name: 'Gegner KI', time: '00:20', status: 'RUNNING' },
+            { id: 7, name: 'Performance', time: 'wartet ...', status: 'WAIT' },
+            { id: 8, name: 'Randfälle', time: 'wartet ...', status: 'WAIT' },
+            { id: 9, name: 'Langzeittest', time: 'wartet ...', status: 'WAIT' },
+            { id: 10, name: 'Absturzprüfung', time: 'wartet ...', status: 'WAIT' }
+        ];
+
+        // Live Logs Data (Screen 4)
+        const logsData = [
+            { time: '18:39:12', type: 'PLAN', text: 'Projekt analysiert – 12 Aufgaben erkannt', detail: 'Task-Graph erstellt: Level 2 Occlusion Culling, Mesh-LODs, Raycast-LayerMask optimieren.' },
+            { time: '18:40:05', type: 'CODE', text: 'Neues Level-System implementiert', detail: 'Modified: Assets/Scripts/LevelManager.cs (+84 -19 lines) via qwen2.5-coder.' },
+            { time: '18:42:18', type: 'TEST', text: 'Testlauf 1/10 gestartet', detail: 'Runner: Unity Android Instrumentation Test #1 (Start & Menü).' },
+            { time: '18:43:01', type: 'TEST', text: 'Testlauf 1/10 erfolgreich', detail: 'Frame-Time Ø 14.2ms | Memory Peak: 412 MB | Status: OK.' },
+            { time: '18:43:22', type: 'TEST', text: 'Testlauf 2/10 gestartet', detail: 'Lade Scene: Level_02_NeonHighway.unity...' },
+            { time: '18:44:10', type: 'WARN', text: 'FPS unter 30 erkannt', detail: 'WARN: Frame drop auf 24.6 FPS bei Sekunde 18 (Highway-Traffic Spawner).' },
+            { time: '18:45:33', type: 'FIX', text: 'AI-Pfadberechnung optimiert', detail: 'Patch: NavMeshAgent Update-Intervall auf 0.15s gebatcht (Commit a3f21c7).' },
+            { time: '18:47:02', type: 'TEST', text: 'Testlauf 3/10 erfolgreich', detail: 'InputManager Latenz: 6.1ms | Keine Exceptions.' },
+            { time: '18:48:11', type: 'CODE', text: 'UI Verbesserungen', detail: 'HUD Canvas Batching optimiert, Overdraw um 22% reduziert.' },
+            { time: '18:49:24', type: 'TEST', text: 'Testlauf 4/10 erfolgreich', detail: 'Spielregeln & Checkpoint-Trigger verifiziert.' },
+            { time: '18:50:09', type: 'TEST', text: 'Testlauf 5/10 erfolgreich', detail: 'MeshCollider gegen BoxCollider getauscht -> 60 FPS stabil.' },
+            { time: '18:50:55', type: 'RUNNING', text: 'Testlauf 6/10 gestartet ...', detail: 'Aktiver Test: Gegner KI Pathfinding unter Last (20 Fahrzeuge).' }
+        ];
+
+        // --- LAYOUT & NAVIGATION ---
+        function setLayoutMode(mode) {
+            layoutMode = mode;
+            const screens = document.querySelectorAll('.phone-frame');
+            const btnSingle = document.getElementById('btnModeSingle');
+            const btnGrid = document.getElementById('btnModeGrid');
+
+            if (mode === 'grid') {
+                screens.forEach(s => s.classList.remove('hidden'));
+                btnGrid.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.5)] flex items-center gap-1.5';
+                btnSingle.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+            } else {
+                screens.forEach(s => {
+                    if (s.dataset.screen === activeScreen) s.classList.remove('hidden');
+                    else s.classList.add('hidden');
+                });
+                btnSingle.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.5)] flex items-center gap-1.5';
+                btnGrid.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+            }
+        }
+
+        function switchScreen(screenId) {
+            activeScreen = screenId;
+            if (layoutMode === 'single') {
+                document.querySelectorAll('.phone-frame').forEach(s => {
+                    if (s.dataset.screen === screenId) s.classList.remove('hidden');
+                    else s.classList.add('hidden');
+                });
+            } else {
+                const target = document.getElementById('screen-' + screenId);
+                if (target) target.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+            }
+        }
+
+        // --- SCREEN 1: DASHBOARD LOOP & PIPELINE ---
+        const stepDescriptions = {
+            1: { speech: 'Phase 1: Analysiere Projekt-Architektur & erstelle Aufgabenplan ...', sub: 'Planung läuft (12 Tasks)', pct: '18%' },
+            2: { speech: 'Phase 2: Generiere C#-Patches mit qwen2.5-coder & kompiliere APK ...', sub: 'Gradle Build aktiv', pct: '38%' },
+            3: { speech: 'Ich arbeite autonom am nächsten Zyklus ...', sub: 'Testlauf 6/10', pct: '60%' },
+            4: { speech: 'Phase 4: Behebe erkannte FPS-Drops im Level 2 automatisch ...', sub: 'Auto-Fix Patch 1/3', pct: '75%' },
+            5: { speech: 'Phase 5: Führe Stresstests 11-20 im Sandbox-Modus durch ...', sub: 'Langzeittest 15/20', pct: '90%' },
+            6: { speech: 'Phase 6: Git Commit auf nexus-dev-48 abgeschlossen! Starte Zyklus #49 ...', sub: 'Zyklus-Abschluss', pct: '100%' }
+        };
+
+        function setLoopStep(step) {
+            currentStep = step;
+            for (let i = 1; i <= 6; i++) {
+                const node = document.getElementById('stepNode' + i);
+                if (i < step) {
+                    node.className = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-emerald-400 bg-emerald-950/80 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]';
+                } else if (i === step) {
+                    node.className = 'w-9 h-9 rounded-full flex items-center justify-center text-sm font-extrabold border-2 border-amber-300 bg-amber-500 text-slate-950 shadow-[0_0_14px_rgba(245,158,11,0.8)]';
+                } else {
+                    node.className = 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-purple-400/70 bg-purple-950/60 text-purple-200';
+                }
+            }
+            const info = stepDescriptions[step];
+            document.getElementById('operatorSpeech').textContent = info.speech;
+            document.getElementById('cycleSubtext').innerHTML = `${info.sub} <strong class="text-white" id="cyclePercent">${info.pct}</strong>`;
+            document.getElementById('cycleProgressBar').style.width = info.pct;
+        }
+
+        function controlLoop(action) {
+            const badge = document.getElementById('agentStatusBadgeText');
+            if (action === 'start') {
+                loopRunning = true;
+                badge.textContent = 'AKTIV';
+                badge.className = 'font-cyber text-[10px] font-bold text-emerald-400';
+                triggerActionToast('Autonomer 24/7 Entwicklungs-Loop läuft.', 'PLAN');
+            } else if (action === 'pause') {
+                loopRunning = false;
+                badge.textContent = 'PAUSIERT';
+                badge.className = 'font-cyber text-[10px] font-bold text-amber-400';
+                triggerActionToast('Entwicklungs-Loop pausiert.', 'WARN');
+            } else if (action === 'stop') {
+                loopRunning = false;
+                badge.textContent = 'GESTOPPT';
+                badge.className = 'font-cyber text-[10px] font-bold text-rose-400';
+                setLoopStep(1);
+                triggerActionToast('Zyklus gestoppt & auf Schritt 1 zurückgesetzt.', 'WARN');
+            }
+        }
+
+        function petInteract() {
+            const messages = [
+                'Nexus Pet: "Alle Unit-Tests im grünen Bereich! 🐾"',
+                'Nexus Pet: "Speicherverbrauch bei 3.2 GB stabil!"',
+                'Nexus Pet: "qwen2.5 hat gerade 3 Collider optimiert!"'
+            ];
+            document.getElementById('operatorSpeech').textContent = messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        // --- SCREEN 2: PROJEKTE SUB-TABS & MODALS ---
+        function switchProjectTab(tab) {
+            ['uebersicht', 'build', 'tests', 'git'].forEach(t => {
+                const btn = document.getElementById('projTab-' + t);
+                btn.className = (t === tab)
+                    ? 'py-1.5 rounded-lg bg-blue-600 text-white font-semibold shadow'
+                    : 'py-1.5 rounded-lg text-slate-300 hover:text-white';
+            });
+
+            const container = document.getElementById('projectInfoContent');
+            if (tab === 'uebersicht') {
+                container.innerHTML = `
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Typ</span><span class="text-slate-100 font-medium">Android App / Game</span></div>
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Engine</span><span class="text-slate-100 font-medium">Unity (Gradle)</span></div>
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Status</span><span class="text-emerald-400 font-semibold">Aktiv</span></div>
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Branch</span><span class="text-cyan-400 font-mono-code">nexus-dev-48</span></div>
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Letzter Commit</span><span class="text-slate-200 font-mono-code text-[11px]"><strong class="text-cyan-300">a3f21c7</strong> - Fix InputManager</span></div>
+                    <div class="flex justify-between items-start pt-0.5"><span class="text-slate-400">Ziel</span><span class="text-slate-200 text-right max-w-[200px]">Performance verbessern, Bugs beheben, neue Features</span></div>
+                `;
+            } else if (tab === 'build') {
+                container.innerHTML = `
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Build-System</span><span class="text-cyan-300 font-mono-code">Gradle 8.4 (IL2CPP)</span></div>
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Ziel-ABI</span><span class="text-slate-100">arm64-v8a</span></div>
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Letzte APK-Größe</span><span class="text-emerald-400 font-mono-code">84.6 MB</span></div>
+                    <div class="flex justify-between py-0.5"><span class="text-slate-400">Kompilierzeit</span><span class="text-slate-200 font-mono-code">01m 14s</span></div>
+                `;
+            } else if (tab === 'tests') {
+                container.innerHTML = `
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Test-Suite</span><span class="text-slate-100">20 Automatisierte Szenarien</span></div>
+                    <div class="flex justify-between py-0.5 border-b border-slate-800/70"><span class="text-slate-400">Durchschnittl. FPS</span><span class="text-emerald-400 font-bold">58.4 FPS</span></div>
+                    <div class="flex justify-between py-0.5"><span class="text-slate-400">Offene Warnungen</span><span class="text-amber-400 font-semibold">1 (Level 2 Spawner)</span></div>
+                `;
+            } else if (tab === 'git') {
+                container.innerHTML = `
+                    <div class="font-mono-code text-[11px] space-y-1.5">
+                        <div class="text-cyan-300">a3f21c7 <span class="text-slate-300">- Fix InputManager & AI Pathing</span></div>
+                        <div class="text-cyan-300">91d04b2 <span class="text-slate-300">- Reduce Level 2 polycount by 18%</span></div>
+                        <div class="text-cyan-300">7c88e10 <span class="text-slate-300">- Implement dynamic Neon Shader LOD</span></div>
+                    </div>
+                `;
+            }
+        }
+
+        function openProjectModal(type) {
+            const modal = document.getElementById('cyberModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            if (type === 'terminal') {
+                title.textContent = 'TERMUX // OPENCODE AGENT SHELL';
+                body.innerHTML = `
+                    <div class="text-emerald-400">nexus@android:~/Projekte/MeinGame$ <span class="text-white">opencode status</span></div>
+                    <div class="text-slate-400">[OK] Ollama Local Server: 127.0.0.1:11434 (qwen2.5-coder:7b)</div>
+                    <div class="text-slate-400">[OK] Active Git Branch: nexus-dev-48</div>
+                    <div class="text-cyan-300">[AGENT] Analysiere Assets/Scripts/AI/TrafficController.cs ...</div>
+                    <div class="text-emerald-300">+ Patch angewendet: RaycastNonAlloc statt Raycast (0 GC Allokationen)</div>
+                    <div class="text-amber-300">[TEST-RUNNER] Starte Instrumentation-Lauf 6/10 ...</div>
+                `;
+            } else {
+                title.textContent = 'DATEI-EXPLORER // MeinGame';
+                body.innerHTML = `
+                    <div class="space-y-1.5">
+                        <div><i class="fa-solid fa-folder text-blue-400 mr-2"></i>Assets/Scripts/Core/</div>
+                        <div class="pl-5 text-cyan-300"><i class="fa-solid fa-file-code mr-1.5"></i>InputManager.cs <span class="text-[10px] text-emerald-400">(Geändert vor 4m)</span></div>
+                        <div class="pl-5 text-cyan-300"><i class="fa-solid fa-file-code mr-1.5"></i>TrafficAIController.cs <span class="text-[10px] text-amber-400">(In Bearbeitung)</span></div>
+                        <div><i class="fa-solid fa-folder text-blue-400 mr-2"></i>Assets/Scenes/Level_02_NeonHighway.unity</div>
+                        <div><i class="fa-solid fa-folder text-blue-400 mr-2"></i>Packages/manifest.json</div>
+                    </div>
+                `;
+            }
+        }
+
+        const sampleProjects = [
+            { name: 'MeinGame', path: '/storage/emulated/0/Projekte/MeinGame' },
+            { name: 'CyberDrift3D', path: '/storage/emulated/0/Projekte/CyberDrift3D' },
+            { name: 'StarColonyRPG', path: '/storage/emulated/0/Projekte/StarColonyRPG' }
+        ];
+        let projIdx = 0;
+        function cycleProjectSwitch() {
+            projIdx = (projIdx + 1) % sampleProjects.length;
+            document.getElementById('projectTitle').textContent = sampleProjects[projIdx].name;
+            document.getElementById('projectPath').textContent = sampleProjects[projIdx].path;
+            triggerActionToast(`Projekt gewechselt zu: ${sampleProjects[projIdx].name}`, 'PLAN');
+        }
+
+        // --- SCREEN 3: GAMEPLAY-TESTS ---
+        function renderTestsList() {
+            const container = document.getElementById('testsListContainer');
+            container.innerHTML = testDataPhase1.map(t => {
+                let iconHtml = '';
+                let rightHtml = '';
+                let rowClass = 'px-3 py-2 flex items-center justify-between';
+
+                if (t.status === 'OK') {
+                    iconHtml = '<i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>';
+                    rightHtml = `<span class="text-slate-400 font-mono-code mr-3">${t.time}</span><span class="font-bold text-emerald-400 w-10 text-right">OK</span>`;
+                } else if (t.status === 'WARN') {
+                    iconHtml = '<i class="fa-solid fa-circle-exclamation text-amber-400 text-sm"></i>';
+                    rightHtml = `<span class="text-slate-400 font-mono-code mr-3">${t.time}</span><span class="font-bold text-amber-400 w-10 text-right">WARN</span>`;
+                } else if (t.status === 'RUNNING') {
+                    rowClass += ' bg-blue-950/50 border-y border-cyan-400/60 shadow-[inset_0_0_12px_rgba(0,229,255,0.18)]';
+                    iconHtml = '<i class="fa-solid fa-circle-check text-cyan-400 text-sm"></i>';
+                    rightHtml = `<span class="text-cyan-300 font-mono-code mr-2">läuft ... ${t.time}</span><i class="fa-solid fa-spinner fa-spin text-cyan-400"></i>`;
+                } else {
+                    iconHtml = '<i class="fa-solid fa-circle-check text-slate-600 text-sm"></i>';
+                    rightHtml = `<span class="text-slate-500 italic">${t.time}</span>`;
+                }
+
+                return `
+                    <div class="${rowClass}">
+                        <div class="flex items-center gap-2.5">
+                            ${iconHtml}
+                            <span class="text-slate-400">Test ${t.id}</span>
+                            <span class="font-semibold text-slate-100">${t.name}</span>
+                        </div>
+                        <div class="flex items-center">${rightHtml}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Update Statistics
+            const passed = testDataPhase1.filter(t => t.status === 'OK').length;
+            const warn = testDataPhase1.filter(t => t.status === 'WARN').length;
+            const open = testDataPhase1.filter(t => t.status === 'WAIT' || t.status === 'RUNNING').length;
+            const pct = Math.round(((passed + warn) / 10) * 100);
+
+            document.getElementById('countPassed').textContent = passed;
+            document.getElementById('countWarn').textContent = warn;
+            document.getElementById('countOpen').textContent = open;
+            document.getElementById('testDonutLabel').textContent = `${passed}/10`;
+            document.getElementById('testDonutArc').setAttribute('stroke-dasharray', `${pct}, 100`);
+        }
+
+        function runRemainingTests() {
+            const runningIdx = testDataPhase1.findIndex(t => t.status === 'RUNNING');
+            if (runningIdx !== -1) {
+                testDataPhase1[runningIdx].status = 'OK';
+                testDataPhase1[runningIdx].time = '00:34';
+                if (runningIdx + 1 < testDataPhase1.length) {
+                    testDataPhase1[runningIdx + 1].status = 'RUNNING';
+                    testDataPhase1[runningIdx + 1].time = '00:12';
+                }
+            } else {
+                // Reset to original demo state if all finished
+                testDataPhase1.forEach((t, idx) => {
+                    if (idx < 5 && idx !== 3) t.status = 'OK';
+                    else if (idx === 3) t.status = 'WARN';
+                    else if (idx === 5) { t.status = 'RUNNING'; t.time = '00:20'; }
+                    else { t.status = 'WAIT'; t.time = 'wartet ...'; }
+                });
+            }
+            renderTestsList();
+            triggerActionToast('Nächster automatischer Gameplay-Testlauf ausgeführt!', 'TEST');
+        }
+
+        function switchTestPhase(phase) {
+            const b1 = document.getElementById('btnPhase1');
+            const b2 = document.getElementById('btnPhase2');
+            if (phase === 1) {
+                b1.className = 'py-1.5 px-3 rounded-xl border border-emerald-400 bg-emerald-950/50 text-center shadow-[0_0_12px_rgba(16,185,129,0.25)]';
+                b2.className = 'py-1.5 px-3 rounded-xl border border-[#1d3252] bg-[#0b1322] text-center hover:border-slate-600';
+            } else {
+                b2.className = 'py-1.5 px-3 rounded-xl border border-emerald-400 bg-emerald-950/50 text-center shadow-[0_0_12px_rgba(16,185,129,0.25)]';
+                b1.className = 'py-1.5 px-3 rounded-xl border border-[#1d3252] bg-[#0b1322] text-center hover:border-slate-600';
+            }
+            triggerActionToast(`Wechsel zu Phase ${phase}`, 'TEST');
+        }
+
+        // --- SCREEN 4: LIVE-LOGS ---
+        function renderLogs() {
+            const container = document.getElementById('logListContainer');
+            const badgeStyle = {
+                PLAN: 'bg-emerald-500 text-slate-950 font-bold',
+                CODE: 'bg-cyan-400 text-slate-950 font-bold',
+                TEST: 'bg-emerald-500 text-slate-950 font-bold',
+                WARN: 'bg-amber-400 text-slate-950 font-bold',
+                FIX:  'bg-purple-500 text-white font-bold',
+                RUNNING: 'bg-slate-700 text-slate-200 font-bold'
+            };
+
+            const filtered = logsData.filter(item => currentLogFilter === 'ALL' || item.type === currentLogFilter);
+
+            container.innerHTML = filtered.map((item, idx) => {
+                const label = item.type === 'RUNNING' ? 'TEST' : item.type;
+                const textColor = item.type === 'TEST' && item.text.includes('erfolgreich')
+                    ? 'text-emerald-400'
+                    : (item.type === 'RUNNING' ? 'text-slate-400' : 'text-slate-100');
+
+                return `
+                    <div onclick="selectLog(${idx})" class="py-1.5 px-2 rounded-lg hover:bg-slate-800/50 cursor-pointer flex items-start gap-2 border-b border-slate-800/50">
+                        <span class="font-mono-code text-slate-400 text-[11px] shrink-0">${item.time}</span>
+                        <span class="px-1.5 py-0.5 rounded text-[9.5px] shrink-0 ${badgeStyle[item.type]}">${label}</span>
+                        <span class="${textColor} leading-snug">${item.text}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterLogs(filterType) {
+            currentLogFilter = filterType;
+            document.querySelectorAll('.log-filter-btn').forEach(btn => {
+                if (btn.dataset.logfilter === filterType) {
+                    btn.className = 'log-filter-btn px-3 py-1 rounded-full font-semibold bg-blue-600 text-white shadow';
+                } else {
+                    btn.className = 'log-filter-btn px-2.5 py-1 rounded-full bg-[#101c30] text-slate-300 border border-slate-700';
+                }
+            });
+            renderLogs();
+        }
+
+        function selectLog(idx) {
+            const item = logsData[idx];
+            selectedLogItem = item;
+            document.getElementById('logDetailPreview').textContent = `[${item.time}] ${item.detail}`;
+        }
+
+        function showSelectedLogDetails() {
+            const item = selectedLogItem || logsData[5];
+            const modal = document.getElementById('cyberModal');
+            document.getElementById('modalTitle').textContent = `LOG-INSPEKTOR // ${item.time} [${item.type}]`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="text-cyan-300 font-bold">${item.text}</div>
+                <div class="text-slate-300 mt-1">${item.detail}</div>
+                <div class="mt-3 p-2.5 rounded bg-slate-900 border border-slate-700 text-[11px] text-emerald-300">
+                    Branch: nexus-dev-48<br>
+                    Agent-Model: Ollama / qwen2.5-coder<br>
+                    Memory Snapshot: 3.21 GB / 8.00 GB
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function addSimulatedLog() {
+            const now = new Date();
+            const tStr = now.toTimeString().split(' ')[0];
+            logsData.push({
+                time: tStr,
+                type: 'FIX',
+                text: 'Shader-Warmup & DrawCall-Batching aktiv (60 FPS stabil)',
+                detail: 'StaticBatchingUtility.Combine auf Neon-Gebäude in Level 2 ausgeführt.'
+            });
+            renderLogs();
+            const container = document.getElementById('logListContainer');
+            container.scrollTop = container.scrollHeight;
+            triggerActionToast('Neuer Live-Log-Eintrag empfangen', 'FIX');
+        }
+
+        // --- SCREEN 5: KI-AGENT ---
+        function switchAgentSubTab(tab) {
+            ['planung', 'codierung', 'analyse', 'reparatur'].forEach(t => {
+                const btn = document.getElementById('agentTab-' + t);
+                btn.className = (t === tab)
+                    ? 'py-1.5 rounded-lg bg-blue-600 text-white font-semibold shadow'
+                    : 'py-1.5 rounded-lg bg-[#0d1729] border border-[#1f3456] text-slate-300 hover:text-white';
+            });
+
+            const list = document.getElementById('agentStepsList');
+            if (tab === 'planung') {
+                list.innerHTML = `
+                    <div class="flex items-center gap-2.5"><span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">1</span><span class="text-slate-200">Profiling der Szene durchführen</span></div>
+                    <div class="flex items-center gap-2.5"><span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">2</span><span class="text-slate-200">Objekte mit hoher Polygonzahl optimieren</span></div>
+                    <div class="flex items-center gap-2.5"><span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">3</span><span class="text-slate-200">Kollisionsabfragen reduzieren</span></div>
+                    <div class="flex items-center gap-2.5"><span class="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300">4</span><span class="text-slate-200">Testlauf 7/10 starten</span></div>
+                `;
+            } else if (tab === 'codierung') {
+                list.innerHTML = `
+                    <div class="font-mono-code text-[10.5px] bg-[#060c17] p-2 rounded-lg border border-slate-800 space-y-1">
+                        <div class="text-slate-400">// Assets/Scripts/TrafficSpawner.cs</div>
+                        <div class="text-rose-400">- void Update() { Physics.RaycastAll(...); }</div>
+                        <div class="text-emerald-400">+ int hits = Physics.RaycastNonAlloc(ray, results, 50f, layerMask);</div>
+                        <div class="text-cyan-300">// GC Alloc reduziert von 2.4 KB/f auf 0 B</div>
+                    </div>
+                `;
+            } else if (tab === 'analyse') {
+                list.innerHTML = `
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between"><span>Draw Calls (Level 2):</span><span class="text-emerald-400 font-mono-code">142 (vorher 310)</span></div>
+                        <div class="flex justify-between"><span>Triangles im Viewport:</span><span class="text-cyan-300 font-mono-code">84.2k</span></div>
+                        <div class="flex justify-between"><span>PhysX Frame Time:</span><span class="text-emerald-400 font-mono-code">2.1 ms</span></div>
+                    </div>
+                `;
+            } else if (tab === 'reparatur') {
+                list.innerHTML = `
+                    <div class="space-y-1.5 text-xs">
+                        <div class="text-emerald-400 font-semibold"><i class="fa-solid fa-check mr-1"></i> Versuch 1/3 erfolgreich</div>
+                        <div class="text-slate-300">Automatischer Rollback-Schutz aktiv (Git-Snapshot vor Patch gesichert).</div>
+                    </div>
+                `;
+            }
+        }
+
+        function selectAiModel(modelKey) {
+            ['ollama', 'deepseek', 'llama3'].forEach(k => {
+                const el = document.getElementById('radio-' + k);
+                if (el) {
+                    el.className = (k === modelKey)
+                        ? 'w-4 h-4 rounded-full bg-emerald-400 border-2 border-emerald-200 shadow-[0_0_8px_#10b981] inline-block'
+                        : 'w-4 h-4 rounded-full border border-slate-500 inline-block';
+                }
+            });
+            triggerActionToast(`Aktives KI-Modell gewechselt auf: ${modelKey.toUpperCase()}`, 'CODE');
+        }
+
+        // --- MODAL & TOAST HELPERS ---
+        function closeModal() {
+            const modal = document.getElementById('cyberModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        let toastTimeout = null;
+        function triggerActionToast(msg) {
+            const toast = document.getElementById('cyberToast');
+            document.getElementById('cyberToastText').textContent = msg;
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.add('hidden'), 3200);
+        }
+
+        // --- LIVE TIMER & TELEMETRY SIMULATION ---
+        function formatDuration(sec) {
+            const hrs = String(Math.floor(sec / 3600)).padStart(2, '0');
+            const mins = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+            const s = String(sec % 60).padStart(2, '0');
+            return `${hrs}:${mins}:${s}`;
+        }
+
+        setInterval(() => {
+            if (!loopRunning) return;
+            elapsedSeconds++;
+            const timerEl = document.getElementById('cycleTimer');
+            if (timerEl) timerEl.textContent = formatDuration(elapsedSeconds);
+
+            // Slight realistic CPU fluctuation (64% - 74%)
+            const cpuVal = 65 + Math.floor(Math.random() * 8);
+            const statCpu = document.getElementById('statCpu');
+            const barCpu = document.getElementById('barCpu');
+            if (statCpu && barCpu) {
+                statCpu.textContent = cpuVal + '%';
+                barCpu.style.width = cpuVal + '%';
+            }
+        }, 1000);
+
+        // Initialize Views on Load
+        window.onload = function () {
+            renderTestsList();
+            renderLogs();
+        };
+    </script>
+</body>
+</html>
